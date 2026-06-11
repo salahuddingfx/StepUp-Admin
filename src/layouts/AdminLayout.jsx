@@ -53,7 +53,7 @@ const AdminLayout = () => {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-gray-800">
           <Link to="/" className="flex items-center space-x-2">
-            <span className="h-8 w-8 rounded-lg bg-brand-red flex items-center justify-center text-white font-extrabold text-lg">ES</span>
+            <img src="/StepUp.jpg" alt="StepUp Logo" className="h-8 w-8 rounded-lg object-cover shadow-lg border border-gray-800" />
             <span className="font-extrabold text-md tracking-wider text-white">
               StepUp <span className="text-xs text-brand-red font-medium">SaaS Admin</span>
             </span>
