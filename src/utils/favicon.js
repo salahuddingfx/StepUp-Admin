@@ -9,49 +9,61 @@ export const initDynamicFavicon = (options = {}) => {
     if (!link) {
       link = document.createElement('link');
       link.rel = 'icon';
-      link.type = 'image/jpeg';
       document.head.appendChild(link);
     }
+    link.type = 'image/png';
     link.href = url;
   };
 
-  // Initial set
-  setFavicon(iconUrl);
+  const img = new Image();
+  img.src = iconUrl;
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d');
 
-  // Dynamic Badging on Tab Icon using HTML5 Canvas (like Tinycon)
-  if (badgeCount > 0) {
-    const img = new Image();
-    img.src = iconUrl;
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext('2d');
+      // Draw the logo onto canvas first
+      ctx.drawImage(img, 0, 0, 32, 32);
 
-        // Draw the StepUp logo base
-        ctx.drawImage(img, 0, 0, 32, 32);
+      // Key out white / light-gray background to make it transparent
+      const imgData = ctx.getImageData(0, 0, 32, 32);
+      const data = imgData.data;
 
-        // Draw Notification bubble badge in top right corner
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // If pixel is white or very close to white, key it out
+        if (r > 235 && g > 235 && b > 235) {
+          data[i + 3] = 0; // Alpha transparent
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      // Draw notification count if specified
+      if (badgeCount > 0) {
         ctx.beginPath();
         ctx.arc(25, 7, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = '#FF4D4D'; // Bright notifications red
+        ctx.fillStyle = '#FF4D4D';
         ctx.fill();
 
-        // Draw white badge number count inside bubble
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 8px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(badgeCount > 9 ? '9+' : badgeCount.toString(), 25, 7);
-
-        // Update favicon href to the canvas image data URI
-        setFavicon(canvas.toDataURL('image/png'));
-      } catch (e) {
-        // Fallback silently if canvas conversion fails due to CORS or other limits
-        setFavicon(iconUrl);
       }
-    };
-  }
+
+      setFavicon(canvas.toDataURL('image/png'));
+    } catch (e) {
+      setFavicon(iconUrl);
+    }
+  };
+  img.onerror = () => {
+    setFavicon(iconUrl);
+  };
 };
