@@ -24,6 +24,10 @@ export const getCourses = async () => {
   return await api.get('/courses');
 };
 
+export const getCourseById = async (id) => {
+  return await api.get(`/courses/${id}`);
+};
+
 export const createCourse = async (courseData) => {
   return await api.post('/courses', courseData);
 };
@@ -38,6 +42,27 @@ export const togglePublishCourse = async (id) => {
 
 export const deleteCourse = async (id) => {
   return await api.delete(`/courses/${id}`);
+};
+
+// Curriculum Management
+export const createModule = async (moduleData) => {
+  return await api.post('/lessons/module', moduleData);
+};
+
+export const updateModule = async (id, moduleData) => {
+  return await api.put(`/lessons/module/${id}`, moduleData);
+};
+
+export const deleteModule = async (id) => {
+  return await api.delete(`/lessons/module/${id}`);
+};
+
+export const createLesson = async (lessonData) => {
+  return await api.post('/lessons', lessonData);
+};
+
+export const deleteLesson = async (id) => {
+  return await api.delete(`/lessons/${id}`);
 };
 
 export const getTransactions = async () => {
