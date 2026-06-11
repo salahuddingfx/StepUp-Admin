@@ -6,6 +6,10 @@ import { Toaster } from 'react-hot-toast';
 import store from './store';
 import App from './App';
 import './index.css';
+import { initDynamicFavicon } from './utils/favicon';
+
+// Initialize custom tab icon logo
+initDynamicFavicon();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
