@@ -1,26 +1,13 @@
-import axios from 'axios';
+import axiosInstance from 'axios';
 
-const api = axios.create({
+const api = axiosInstance.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
   timeout: 15000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
-
-// Request Interceptor: Attach token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response Interceptor: Handle errors
 api.interceptors.response.use(
@@ -33,17 +20,16 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/auth/refresh-token`, { refreshToken });
-          if (res.data && res.data.success) {
-            localStorage.setItem('token', res.data.accessToken);
-            api.defaults.headers.common.Authorization = `Bearer ${res.data.accessToken}`;
-            return api(originalRequest);
-          }
+        // Silent refresh: cookies automatically sent and set by browser
+        const res = await axiosInstance.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/auth/refresh-token`,
+          {},
+          { withCredentials: true }
+        );
+        if (res.data && res.data.success) {
+          return api(originalRequest);
         }
       } catch (refreshError) {
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
