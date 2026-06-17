@@ -115,6 +115,9 @@ const Payments = () => {
                   <th className="p-4">Course</th>
                   <th className="p-4">Amount</th>
                   <th className="p-4">Method</th>
+                  <th className="p-4">Sender</th>
+                  <th className="p-4">TrxID</th>
+                  <th className="p-4">Coupon</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Date</th>
                   <th className="p-4 text-center">Actions</th>
