@@ -88,3 +88,11 @@ export const updateUserRole = async (id, role) => {
 export const deleteUser = async (id) => {
   return await api.delete(`/users/${id}`);
 };
+
+export const getSettings = async () => {
+  return await api.get('/settings');
+};
+
+export const updateSettings = async (settingsData) => {
+  return await api.put('/settings', settingsData);
+};
