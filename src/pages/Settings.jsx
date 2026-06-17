@@ -1,28 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Save, Loader2, Settings as SettingsIcon } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
+import { getSettings, updateSettings } from '../services/admin.service';
 
 const Settings = () => {
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit } = useForm({
+  const [fetching, setFetching] = useState(true);
+  const { register, handleSubmit, reset } = useForm({
     defaultValues: {
-      appName: 'English StepUp',
-      tagline: 'Empowering Growth',
-      contactEmail: 'info@englishstepup.com',
-      contactPhone: '+880 1712-345678',
-      maintenanceMode: false
+      appName: '',
+      tagline: '',
+      contactEmail: '',
+      contactPhone: '',
+      maintenanceMode: false,
+      allowTeacherRegistration: false
     }
   });
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await getSettings();
+        if (response.success && response.data) {
+          reset(response.data);
+        }
+      } catch (error) {
+        toast.error(error.message || 'Failed to load system settings');
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchSettings();
+  }, [reset]);
+
   const onSubmit = async (data) => {
     setLoading(true);
-    // Simulate API update
-    setTimeout(() => {
+    try {
+      const response = await updateSettings(data);
+      if (response.success) {
+        toast.success(response.message || 'System configurations updated successfully!');
+        reset(response.data);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to update configurations');
+    } finally {
       setLoading(false);
-      toast.success('System configurations updated successfully!');
-    }, 1000);
+    }
   };
+
+  if (fetching) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-red" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -75,7 +108,7 @@ const Settings = () => {
               </div>
             </div>
 
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-800/50">
               <label className="flex items-center space-x-2.5 cursor-pointer">
                 <input 
                   type="checkbox" 
@@ -83,6 +116,17 @@ const Settings = () => {
                   className="text-brand-red focus:ring-brand-red h-4 w-4 rounded" 
                 />
                 <span className="text-xs font-semibold">Enable Under-Maintenance Mode Toggles</span>
+              </label>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <label className="flex items-center space-x-2.5 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  {...register('allowTeacherRegistration')}
+                  className="text-brand-red focus:ring-brand-red h-4 w-4 rounded" 
+                />
+                <span className="text-xs font-semibold">Allow Teacher Registration (on client site)</span>
               </label>
             </div>
           </div>
