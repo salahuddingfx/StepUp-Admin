@@ -128,3 +128,19 @@ export const getAssignments = async () => {
 export const getLessons = async () => {
   return await api.get('/lessons');
 };
+
+export const getCoupons = async () => {
+  return await api.get('/coupons');
+};
+
+export const createCoupon = async (data) => {
+  return await api.post('/coupons', data);
+};
+
+export const updateCoupon = async (id, data) => {
+  return await api.put(`/coupons/${id}`, data);
+};
+
+export const deleteCoupon = async (id) => {
+  return await api.delete(`/coupons/${id}`);
+};
