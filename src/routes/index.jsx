@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { loginSuccess } from '../store/authSlice';
+import { loginSuccess, logoutUser } from '../store/authSlice';
+import api from '../services/api';
 
 // Layout
 import AdminLayout from '../layouts/AdminLayout';
@@ -21,29 +22,41 @@ import Login from '../pages/Login';
 const AdminRouteGuard = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const [checking, setChecking] = useState(!isAuthenticated);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenParam = urlParams.get('token');
-    const userParam = urlParams.get('user');
-
-    if (tokenParam && userParam) {
-      try {
-        const parsedUser = JSON.parse(decodeURIComponent(userParam));
-        dispatch(loginSuccess({
-          accessToken: tokenParam,
-          user: parsedUser
-        }));
-        // Clean URL parameters
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-      } catch (err) {
-        console.error('Error parsing auth parameters:', err);
+    const checkSession = async () => {
+      if (isAuthenticated) {
+        setChecking(false);
+        return;
       }
-    }
-  }, [dispatch]);
 
-  if (!isAuthenticated && !new URLSearchParams(window.location.search).get('token')) {
+      try {
+        const res = await api.get('/users/profile');
+        if (res.success && res.user && res.user.role === 'admin') {
+          dispatch(loginSuccess({ user: res.user }));
+        } else {
+          dispatch(logoutUser());
+        }
+      } catch (err) {
+        dispatch(logoutUser());
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkSession();
+  }, [isAuthenticated, dispatch]);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-brand-black text-gray-400 flex items-center justify-center text-xs font-semibold select-none">
+        Restoring administrator session...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
