@@ -72,3 +72,19 @@ export const getTransactions = async () => {
 export const getPayments = async () => {
   return await api.get('/payments/history');
 };
+
+export const updatePaymentStatus = async (id, status) => {
+  return await api.put(`/payments/${id}/status`, { status });
+};
+
+export const deletePayment = async (id) => {
+  return await api.delete(`/payments/${id}`);
+};
+
+export const updateUserRole = async (id, role) => {
+  return await api.patch(`/users/${id}/role`, { role });
+};
+
+export const deleteUser = async (id) => {
+  return await api.delete(`/users/${id}`);
+};
