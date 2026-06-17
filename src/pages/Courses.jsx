@@ -12,25 +12,24 @@ import {
   deleteLesson
 } from '../services/admin.service';
 import { useForm } from 'react-hook-form';
-import { Plus, Trash2, Eye, EyeOff, X, Edit, BookOpen, ChevronRight, PlusCircle, Play, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, X, Edit, BookOpen, ChevronRight, PlusCircle, Play, Loader2, BookOpen as BookOpenIcon, AlertCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCurriculumModal, setShowCurriculumModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   
-  // Curriculum States
   const [curriculumStructure, setCurriculumStructure] = useState([]);
   const [curriculumLoading, setCurriculumLoading] = useState(false);
   const [newModTitle, setNewModTitle] = useState('');
   const [newModDesc, setNewModDesc] = useState('');
   
-  // Lesson creation form state
   const [activeAddLessonModId, setActiveAddLessonModId] = useState(null);
   const [newLessTitle, setNewLessTitle] = useState('');
   const [newLessDesc, setNewLessDesc] = useState('');
@@ -64,7 +63,7 @@ const Courses = () => {
       });
       if (res.success) {
         setValueField(fieldName, res.url);
-        toast.success(`${type === 'thumbnail' ? 'Thumbnail' : 'Intro video'} uploaded successfully to Cloudinary!`);
+        toast.success(`${type === 'thumbnail' ? 'Thumbnail' : 'Intro video'} uploaded successfully!`);
       }
     } catch (err) {
       toast.error(err.message || 'Upload failed');
@@ -88,7 +87,7 @@ const Courses = () => {
       });
       if (res.success) {
         setNewLessPdf(res.url);
-        toast.success('Resource PDF uploaded successfully to Cloudinary!');
+        toast.success('Resource PDF uploaded successfully!');
       }
     } catch (err) {
       toast.error(err.message || 'Upload failed');
@@ -97,23 +96,18 @@ const Courses = () => {
     }
   };
 
-  // Mocks fallback
-  const mockCourses = [
-    { _id: 'c1', title: 'English Phonics Masterclass', category: 'Kids English', price: 1500, enrollmentsCount: 8, isPublished: true },
-    { _id: 'c2', title: 'Interactive Grammar & Vocabulary', category: 'Junior English', price: 2000, enrollmentsCount: 12, isPublished: true },
-    { _id: 'c3', title: 'SSC Academic Prep Suite', category: 'SSC English Preparation', price: 3000, enrollmentsCount: 4, isPublished: false }
-  ];
-
   const fetchAllCourses = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await getCourses();
       if (res.success) {
         setCourses(res.courses);
       } else {
-        setCourses(mockCourses);
+        setError('Failed to fetch courses');
       }
     } catch (err) {
-      setCourses(mockCourses);
+      setError(err.message || 'Failed to load courses. Check your connection.');
     } finally {
       setLoading(false);
     }
@@ -131,8 +125,7 @@ const Courses = () => {
         setCourses(prev => prev.map(c => c._id === id ? { ...c, isPublished: !c.isPublished } : c));
       }
     } catch (err) {
-      setCourses(prev => prev.map(c => c._id === id ? { ...c, isPublished: !c.isPublished } : c));
-      toast.success('Course status toggled (mock)!');
+      toast.error(err.message || 'Failed to toggle publish status');
     }
   };
 
@@ -145,8 +138,7 @@ const Courses = () => {
         setCourses(prev => prev.filter(c => c._id !== id));
       }
     } catch (err) {
-      setCourses(prev => prev.filter(c => c._id !== id));
-      toast.success('Course deleted (mock)!');
+      toast.error(err.message || 'Failed to delete course');
     }
   };
 
@@ -165,19 +157,7 @@ const Courses = () => {
         fetchAllCourses();
       }
     } catch (err) {
-      // Mock append
-      const mockNew = {
-        _id: 'c_new_' + Date.now(),
-        title: data.title,
-        category: data.category,
-        price: Number(data.price),
-        enrollmentsCount: 0,
-        isPublished: false
-      };
-      setCourses(prev => [...prev, mockNew]);
-      toast.success('Course created locally (mock)!');
-      setShowModal(false);
-      resetCreate();
+      toast.error(err.message || 'Failed to create course');
     }
   };
 
@@ -191,7 +171,7 @@ const Courses = () => {
       level: course.level || 'Beginner',
       description: course.description,
       thumbnail: course.thumbnail,
-      introVideoUrl: course.introVideoUrl || 'https://www.w3schools.com/html/mov_bbb.mp4',
+      introVideoUrl: course.introVideoUrl || '',
       outcomes: course.outcomes ? course.outcomes.join(', ') : ''
     });
     setShowEditModal(true);
@@ -215,7 +195,6 @@ const Courses = () => {
     }
   };
 
-  // Curriculum Handlers
   const fetchCurriculum = async (courseId) => {
     setCurriculumLoading(true);
     try {
@@ -313,6 +292,48 @@ const Courses = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="space-y-1">
+            <h2 className="text-xl font-extrabold text-brand-black dark:text-white">Course Directory</h2>
+            <p className="text-xs text-gray-500">Manage course catalogs, prices, descriptions, and learning assets.</p>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-brand-darkGray rounded-2xl border border-gray-200/50 dark:border-gray-800/80 p-8">
+          <div className="space-y-4 animate-pulse">
+            {[1,2,3].map(i => <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 rounded-lg" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && courses.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="space-y-1">
+            <h2 className="text-xl font-extrabold text-brand-black dark:text-white">Course Directory</h2>
+            <p className="text-xs text-gray-500">Manage course catalogs, prices, descriptions, and learning assets.</p>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-brand-darkGray rounded-2xl border border-gray-200/50 dark:border-gray-800/80 p-12 text-center space-y-4">
+          <AlertCircle className="h-10 w-10 mx-auto text-red-400" />
+          <div>
+            <h3 className="text-sm font-bold text-brand-black dark:text-white">Failed to load courses</h3>
+            <p className="text-xs text-gray-500 mt-1">{error}</p>
+          </div>
+          <button onClick={fetchAllCourses} className="inline-flex items-center space-x-2 px-4 py-2 bg-brand-red text-white rounded-full text-xs font-bold hover:bg-red-600 transition-colors">
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Retry</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -323,15 +344,19 @@ const Courses = () => {
 
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center space-x-1.5 px-4 py-2.5 bg-brand-red text-white text-xs font-bold rounded-lg shadow-md shadow-brand-red/10 animate-in fade-in"
+          className="flex items-center space-x-1.5 px-4 py-2.5 bg-brand-red text-white text-xs font-bold rounded-lg shadow-md shadow-brand-red/10 hover:bg-red-600 transition-all"
         >
           <Plus className="h-4 w-4" />
           <span>New Course</span>
         </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-20 text-xs text-gray-500">Loading courses catalog...</div>
+      {courses.length === 0 ? (
+        <div className="bg-white dark:bg-brand-darkGray rounded-2xl border border-gray-200/50 dark:border-gray-800/80 p-12 text-center space-y-3">
+          <BookOpenIcon className="h-10 w-10 mx-auto text-gray-300" />
+          <h3 className="text-sm font-bold text-brand-black dark:text-white">No courses created yet</h3>
+          <p className="text-xs text-gray-500">Create your first course to get started.</p>
+        </div>
       ) : (
         <div className="bg-white dark:bg-brand-darkGray rounded-2xl border border-gray-200/50 dark:border-gray-800/80 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
@@ -350,47 +375,49 @@ const Courses = () => {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {courses.map(course => (
                   <tr key={course._id} className="hover:bg-gray-50/50 dark:hover:bg-brand-black/10">
-                    <td className="p-4 font-bold">{course.title}</td>
+                    <td className="p-4 font-bold text-brand-black dark:text-white">{course.title}</td>
                     <td className="p-4 text-gray-500">{course.category}</td>
                     <td className="p-4 text-gray-500">{course.level || 'Beginner'}</td>
                     <td className="p-4 font-semibold text-brand-red">৳{course.price}</td>
-                    <td className="p-4 text-gray-450">{course.enrollmentsCount || 0} students</td>
+                    <td className="p-4 text-gray-500">{course.enrollmentsCount || 0} students</td>
                     <td className="p-4">
-                      <span className={`px-2 py-0.5 text-[9px] font-bold rounded ${
-                        course.isPublished ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                      <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${
+                        course.isPublished ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400'
                       }`}>
                         {course.isPublished ? 'Published' : 'Draft'}
                       </span>
                     </td>
-                    <td className="p-4 flex items-center justify-center space-x-2">
-                      <button
-                        onClick={() => handleCurriculumClick(course)}
-                        className="p-1.5 bg-gray-100 dark:bg-brand-black/40 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200"
-                        title="Manage Curriculum"
-                      >
-                        <BookOpen className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEditClick(course)}
-                        className="p-1.5 bg-gray-100 dark:bg-brand-black/40 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200"
-                        title="Edit Details"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleTogglePublish(course._id)}
-                        className="p-1.5 bg-gray-100 dark:bg-brand-black/40 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200"
-                        title={course.isPublished ? 'Unpublish' : 'Publish'}
-                      >
-                        {course.isPublished ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(course._id)}
-                        className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <td className="p-4">
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleCurriculumClick(course)}
+                          className="p-1.5 bg-gray-100 dark:bg-brand-black/40 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all"
+                          title="Manage Curriculum"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEditClick(course)}
+                          className="p-1.5 bg-gray-100 dark:bg-brand-black/40 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all"
+                          title="Edit Details"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleTogglePublish(course._id)}
+                          className="p-1.5 bg-gray-100 dark:bg-brand-black/40 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all"
+                          title={course.isPublished ? 'Unpublish' : 'Publish'}
+                        >
+                          {course.isPublished ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(course._id)}
+                          className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -400,7 +427,6 @@ const Courses = () => {
         </div>
       )}
 
-      {/* Create Course Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-brand-darkGray max-w-lg w-full rounded-2xl p-6 border border-gray-100 dark:border-gray-800 space-y-4 shadow-xl relative animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
@@ -415,22 +441,13 @@ const Courses = () => {
             <form onSubmit={handleSubmitCreate(onCreateSubmit)} className="space-y-4 pt-2">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Course Title</label>
-                <input 
-                  type="text" 
-                  required 
-                  {...registerCreate('title')}
-                  placeholder="e.g. Fluent Spoken English"
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                />
+                <input type="text" required {...registerCreate('title')} placeholder="e.g. Fluent Spoken English" className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Category</label>
-                  <select 
-                    {...registerCreate('category')}
-                    className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none text-brand-black dark:text-gray-200"
-                  >
+                  <select {...registerCreate('category')} className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none text-brand-black dark:text-gray-200">
                     <option value="Kids English">Kids English</option>
                     <option value="Junior English">Junior English</option>
                     <option value="SSC English Preparation">SSC English Preparation</option>
@@ -440,10 +457,7 @@ const Courses = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Difficulty Level</label>
-                  <select 
-                    {...registerCreate('level')}
-                    className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none text-brand-black dark:text-gray-200"
-                  >
+                  <select {...registerCreate('level')} className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none text-brand-black dark:text-gray-200">
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
                     <option value="Advanced">Advanced</option>
@@ -455,144 +469,69 @@ const Courses = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Price (৳)</label>
-                  <input 
-                    type="number" 
-                    required 
-                    {...registerCreate('price')}
-                    placeholder="2500"
-                    className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="number" required {...registerCreate('price')} placeholder="2500" className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Duration</label>
-                  <input 
-                    type="text" 
-                    required 
-                    {...registerCreate('duration')}
-                    placeholder="e.g. 8 Weeks"
-                    className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="text" required {...registerCreate('duration')} placeholder="e.g. 8 Weeks" className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Thumbnail / Banner URL</label>
                 <div className="flex space-x-2">
-                  <input 
-                    type="url" 
-                    required 
-                    {...registerCreate('thumbnail')}
-                    placeholder="https://images.unsplash.com/..."
-                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="url" required {...registerCreate('thumbnail')} placeholder="https://images.unsplash.com/..." className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                   <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
-                    {uploading.thumbnail ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      'Upload Banner'
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => handleCloudinaryUpload(e, 'thumbnail', 'thumbnail', setValueCreate)}
-                      className="hidden"
-                    />
+                    {uploading.thumbnail ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Upload Banner'}
+                    <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, 'thumbnail', 'thumbnail', setValueCreate)} className="hidden" />
                   </label>
                 </div>
-                {watchCreateThumbnail && (
-                  <img src={watchCreateThumbnail} alt="Thumbnail preview" className="h-16 w-full object-cover rounded-lg mt-2 border border-gray-200" />
-                )}
+                {watchCreateThumbnail && <img src={watchCreateThumbnail} alt="Preview" className="h-16 w-full object-cover rounded-lg mt-2 border border-gray-200" />}
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Intro Video URL</label>
                 <div className="flex space-x-2">
-                  <input 
-                    type="url" 
-                    required 
-                    {...registerCreate('introVideoUrl')}
-                    placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
-                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="url" required {...registerCreate('introVideoUrl')} placeholder="https://www.w3schools.com/html/mov_bbb.mp4" className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                   <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
-                    {uploading.video ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      'Upload Video'
-                    )}
-                    <input 
-                      type="file" 
-                      accept="video/*"
-                      onChange={(e) => handleCloudinaryUpload(e, 'video', 'introVideoUrl', setValueCreate)}
-                      className="hidden"
-                    />
+                    {uploading.video ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Upload Video'}
+                    <input type="file" accept="video/*" onChange={(e) => handleCloudinaryUpload(e, 'video', 'introVideoUrl', setValueCreate)} className="hidden" />
                   </label>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Outcomes (Comma separated)</label>
-                <textarea 
-                  rows="2"
-                  {...registerCreate('outcomes')}
-                  placeholder="Outcome 1, Outcome 2, Outcome 3"
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none"
-                />
+                <textarea rows="2" {...registerCreate('outcomes')} placeholder="Outcome 1, Outcome 2, Outcome 3" className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none" />
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Description</label>
-                <textarea 
-                  rows="3"
-                  required 
-                  {...registerCreate('description')}
-                  placeholder="Course summary details..."
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none"
-                />
+                <textarea rows="3" required {...registerCreate('description')} placeholder="Course summary details..." className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none" />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2.5 bg-brand-red hover:bg-red-600 text-white rounded-lg text-xs font-bold shadow-md shadow-brand-red/10 transition-all"
-              >
-                Create Course
-              </button>
+              <button type="submit" className="w-full py-2.5 bg-brand-red hover:bg-red-600 text-white rounded-lg text-xs font-bold shadow-md shadow-brand-red/10 transition-all">Create Course</button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Edit Course Modal */}
       {showEditModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-brand-darkGray max-w-lg w-full rounded-2xl p-6 border border-gray-100 dark:border-gray-800 space-y-4 shadow-xl relative animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-            <button 
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowEditModal(false)}
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onClick={() => setShowEditModal(false)}><X className="h-5 w-5" /></button>
             <h3 className="text-sm font-extrabold text-brand-black dark:text-white border-b border-gray-100 dark:border-gray-850 pb-2">Edit Course Details</h3>
 
             <form onSubmit={handleSubmitEdit(onEditSubmit)} className="space-y-4 pt-2">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Course Title</label>
-                <input 
-                  type="text" 
-                  required 
-                  {...registerEdit('title')}
-                  placeholder="e.g. Fluent Spoken English"
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                />
+                <input type="text" required {...registerEdit('title')} placeholder="e.g. Fluent Spoken English" className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Category</label>
-                  <select 
-                    {...registerEdit('category')}
-                    className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none text-brand-black dark:text-gray-200"
-                  >
+                  <select {...registerEdit('category')} className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none">
                     <option value="Kids English">Kids English</option>
                     <option value="Junior English">Junior English</option>
                     <option value="SSC English Preparation">SSC English Preparation</option>
@@ -602,10 +541,7 @@ const Courses = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Difficulty Level</label>
-                  <select 
-                    {...registerEdit('level')}
-                    className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none text-brand-black dark:text-gray-200"
-                  >
+                  <select {...registerEdit('level')} className="w-full px-3 py-2 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none">
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
                     <option value="Advanced">Advanced</option>
@@ -617,123 +553,57 @@ const Courses = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Price (৳)</label>
-                  <input 
-                    type="number" 
-                    required 
-                    {...registerEdit('price')}
-                    placeholder="2500"
-                    className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="number" required {...registerEdit('price')} className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Duration</label>
-                  <input 
-                    type="text" 
-                    required 
-                    {...registerEdit('duration')}
-                    placeholder="e.g. 8 Weeks"
-                    className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="text" required {...registerEdit('duration')} className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Thumbnail / Banner URL</label>
                 <div className="flex space-x-2">
-                  <input 
-                    type="url" 
-                    required 
-                    {...registerEdit('thumbnail')}
-                    placeholder="https://images.unsplash.com/..."
-                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="url" required {...registerEdit('thumbnail')} className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                   <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
-                    {uploading.thumbnail ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      'Upload Banner'
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => handleCloudinaryUpload(e, 'thumbnail', 'thumbnail', setValueEdit)}
-                      className="hidden"
-                    />
+                    {uploading.thumbnail ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Upload Banner'}
+                    <input type="file" accept="image/*" onChange={(e) => handleCloudinaryUpload(e, 'thumbnail', 'thumbnail', setValueEdit)} className="hidden" />
                   </label>
                 </div>
-                {watchEditThumbnail && (
-                  <img src={watchEditThumbnail} alt="Thumbnail preview" className="h-16 w-full object-cover rounded-lg mt-2 border border-gray-200" />
-                )}
+                {watchEditThumbnail && <img src={watchEditThumbnail} alt="Preview" className="h-16 w-full object-cover rounded-lg mt-2 border border-gray-200" />}
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Intro Video URL</label>
                 <div className="flex space-x-2">
-                  <input 
-                    type="url" 
-                    required 
-                    {...registerEdit('introVideoUrl')}
-                    placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
-                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <input type="url" required {...registerEdit('introVideoUrl')} className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
                   <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
-                    {uploading.video ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      'Upload Video'
-                    )}
-                    <input 
-                      type="file" 
-                      accept="video/*"
-                      onChange={(e) => handleCloudinaryUpload(e, 'video', 'introVideoUrl', setValueEdit)}
-                      className="hidden"
-                    />
+                    {uploading.video ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Upload Video'}
+                    <input type="file" accept="video/*" onChange={(e) => handleCloudinaryUpload(e, 'video', 'introVideoUrl', setValueEdit)} className="hidden" />
                   </label>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Outcomes (Comma separated)</label>
-                <textarea 
-                  rows="2"
-                  {...registerEdit('outcomes')}
-                  placeholder="Outcome 1, Outcome 2, Outcome 3"
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none"
-                />
+                <textarea rows="2" {...registerEdit('outcomes')} className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none" />
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Description</label>
-                <textarea 
-                  rows="3"
-                  required 
-                  {...registerEdit('description')}
-                  placeholder="Course summary details..."
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none"
-                />
+                <textarea rows="3" required {...registerEdit('description')} className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none" />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2.5 bg-brand-red hover:bg-red-600 text-white rounded-lg text-xs font-bold shadow-md shadow-brand-red/10 transition-all"
-              >
-                Save Changes
-              </button>
+              <button type="submit" className="w-full py-2.5 bg-brand-red hover:bg-red-600 text-white rounded-lg text-xs font-bold shadow-md shadow-brand-red/10 transition-all">Save Changes</button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Curriculum Manager Modal */}
       {showCurriculumModal && selectedCourse && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-brand-darkGray max-w-2xl w-full rounded-2xl p-6 border border-gray-100 dark:border-gray-800 space-y-6 shadow-xl relative animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-            <button 
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowCurriculumModal(false)}
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onClick={() => setShowCurriculumModal(false)}><X className="h-5 w-5" /></button>
             
             <div className="border-b border-gray-100 dark:border-gray-850 pb-3">
               <span className="text-[9px] uppercase tracking-wider text-brand-red font-extrabold">Curriculum Builder</span>
@@ -741,11 +611,9 @@ const Courses = () => {
             </div>
 
             {curriculumLoading ? (
-              <div className="text-center py-20 text-xs text-gray-500">Loading curriculum data structure...</div>
+              <div className="text-center py-20 text-xs text-gray-500">Loading curriculum...</div>
             ) : (
               <div className="space-y-6">
-                
-                {/* Module List */}
                 <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-1">
                   {curriculumStructure.length === 0 ? (
                     <div className="text-center py-10 bg-gray-50 dark:bg-brand-black/25 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 text-xs text-gray-400">
@@ -757,17 +625,11 @@ const Courses = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="text-xs font-extrabold text-brand-black dark:text-white">{mod.title}</h4>
-                            <p className="text-[10px] text-gray-450 mt-0.5">{mod.description || 'No description'}</p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">{mod.description || 'No description'}</p>
                           </div>
-                          <button
-                            onClick={() => handleDeleteModule(mod._id)}
-                            className="text-[10px] text-red-500 hover:underline font-bold"
-                          >
-                            Delete Module
-                          </button>
+                          <button onClick={() => handleDeleteModule(mod._id)} className="text-[10px] text-red-500 hover:underline font-bold">Delete Module</button>
                         </div>
 
-                        {/* Lessons list */}
                         <div className="pl-3 border-l border-gray-200 dark:border-gray-850 space-y-3">
                           <h5 className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Lessons</h5>
                           {mod.lessons && mod.lessons.length > 0 ? (
@@ -779,19 +641,11 @@ const Courses = () => {
                                     <span className="text-[11px] text-gray-850 dark:text-white">{less.title}</span>
                                     <span className="text-gray-400 font-normal">({less.duration || '30 mins'})</span>
                                   </div>
-                                  <button
-                                    onClick={() => handleDeleteLesson(less._id)}
-                                    className="text-gray-400 hover:text-red-500 transition-colors"
-                                  >
+                                  <button onClick={() => handleDeleteLesson(less._id)} className="text-gray-400 hover:text-red-500 transition-colors">
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
-
-                                {less.description && (
-                                  <p className="text-[9.5px] text-gray-450 dark:text-gray-405 leading-relaxed">{less.description}</p>
-                                )}
-
-
+                                {less.description && <p className="text-[9.5px] text-gray-500 leading-relaxed">{less.description}</p>}
                               </div>
                             ))
                           ) : (
@@ -799,151 +653,57 @@ const Courses = () => {
                           )}
                         </div>
 
-                        {/* Add Lesson inline form toggle */}
                         {activeAddLessonModId === mod._id ? (
-                          <form 
-                            onSubmit={(e) => handleAddLessonSubmit(e, mod._id)}
-                            className="bg-white dark:bg-brand-darkGray/80 border border-gray-150 dark:border-gray-800 p-3 rounded-lg space-y-3 animate-in slide-in-from-top-1"
-                          >
+                          <form onSubmit={(e) => handleAddLessonSubmit(e, mod._id)} className="bg-white dark:bg-brand-darkGray/80 border border-gray-150 dark:border-gray-800 p-3 rounded-lg space-y-3 animate-in slide-in-from-top-1">
                             <div className="text-[10px] font-bold text-brand-red">Add Lesson to Module</div>
                             <div className="grid grid-cols-2 gap-3">
-                              <input 
-                                type="text"
-                                placeholder="Lesson Title"
-                                required
-                                value={newLessTitle}
-                                onChange={(e) => setNewLessTitle(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
-                              />
-                              <input 
-                                type="text"
-                                placeholder="Duration (e.g. 15 mins)"
-                                value={newLessDuration}
-                                onChange={(e) => setNewLessDuration(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
-                              />
+                              <input type="text" placeholder="Lesson Title" required value={newLessTitle} onChange={(e) => setNewLessTitle(e.target.value)} className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white" />
+                              <input type="text" placeholder="Duration (e.g. 15 mins)" value={newLessDuration} onChange={(e) => setNewLessDuration(e.target.value)} className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white" />
                             </div>
-                            
                             <div className="grid grid-cols-2 gap-3">
-                              <input 
-                                type="text"
-                                placeholder="Short Description"
-                                value={newLessDesc}
-                                onChange={(e) => setNewLessDesc(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
-                              />
-                              <input 
-                                type="url"
-                                placeholder="Video URL (YouTube/Vimeo/MP4)"
-                                value={newLessVideo}
-                                onChange={(e) => setNewLessVideo(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
-                              />
+                              <input type="text" placeholder="Short Description" value={newLessDesc} onChange={(e) => setNewLessDesc(e.target.value)} className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white" />
+                              <input type="url" placeholder="Video URL" value={newLessVideo} onChange={(e) => setNewLessVideo(e.target.value)} className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white" />
                             </div>
-
-                            <textarea 
-                              placeholder="Study Notes / Markdown Content..."
-                              rows="2"
-                              value={newLessContent}
-                              onChange={(e) => setNewLessContent(e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white resize-none"
-                            />
-
+                            <textarea placeholder="Study Notes / Markdown Content..." rows="2" value={newLessContent} onChange={(e) => setNewLessContent(e.target.value)} className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white resize-none" />
                             <div className="space-y-1">
-                              <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">PDF Notes / Resource Material</label>
+                              <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">PDF Notes</label>
                               <div className="flex space-x-2">
-                                <input 
-                                  type="url" 
-                                  placeholder="PDF Resource URL (https://...)"
-                                  value={newLessPdf}
-                                  onChange={(e) => setNewLessPdf(e.target.value)}
-                                  className="flex-grow px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
-                                />
+                                <input type="url" placeholder="PDF URL" value={newLessPdf} onChange={(e) => setNewLessPdf(e.target.value)} className="flex-grow px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white" />
                                 <label className="px-3 py-1.5 bg-brand-black text-white hover:bg-black rounded-md text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
-                                  {uploading.pdf ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    'Upload PDF'
-                                  )}
-                                  <input 
-                                    type="file" 
-                                    accept=".pdf"
-                                    onChange={handleLessonPdfUpload}
-                                    className="hidden"
-                                  />
+                                  {uploading.pdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Upload PDF'}
+                                  <input type="file" accept=".pdf" onChange={handleLessonPdfUpload} className="hidden" />
                                 </label>
                               </div>
                             </div>
-
                             <div className="flex justify-end space-x-2 pt-1">
-                              <button 
-                                type="button"
-                                onClick={() => setActiveAddLessonModId(null)}
-                                className="px-3 py-1 bg-gray-100 dark:bg-brand-black text-[10px] font-bold rounded-md"
-                              >
-                                Cancel
-                              </button>
-                              <button 
-                                type="submit"
-                                className="px-3 py-1 bg-brand-red text-white text-[10px] font-bold rounded-md hover:bg-red-600"
-                              >
-                                Add Lesson
-                              </button>
+                              <button type="button" onClick={() => setActiveAddLessonModId(null)} className="px-3 py-1 bg-gray-100 dark:bg-brand-black text-[10px] font-bold rounded-md">Cancel</button>
+                              <button type="submit" className="px-3 py-1 bg-brand-red text-white text-[10px] font-bold rounded-md hover:bg-red-600">Add Lesson</button>
                             </div>
                           </form>
                         ) : (
-                          <button
-                            onClick={() => {
-                              setActiveAddLessonModId(mod._id);
-                              setNewLessTitle('');
-                              setNewLessVideo('');
-                            }}
-                            className="flex items-center space-x-1 text-[10px] text-brand-red hover:underline font-bold"
-                          >
+                          <button onClick={() => { setActiveAddLessonModId(mod._id); setNewLessTitle(''); setNewLessVideo(''); }} className="flex items-center space-x-1 text-[10px] text-brand-red hover:underline font-bold">
                             <PlusCircle className="h-3 w-3" />
                             <span>Add Lesson</span>
                           </button>
                         )}
-
                       </div>
                     ))
                   )}
                 </div>
 
-                {/* Add Module Box */}
                 <form onSubmit={handleAddModule} className="border-t border-gray-100 dark:border-gray-850 pt-4 space-y-3">
                   <h4 className="text-xs font-extrabold text-brand-black dark:text-white uppercase tracking-wider">Add New Module</h4>
                   <div className="space-y-2">
-                    <input 
-                      type="text" 
-                      placeholder="Module Title (e.g., Module 1: Introduction to Grammar)"
-                      required
-                      value={newModTitle}
-                      onChange={(e) => setNewModTitle(e.target.value)}
-                      className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                    />
-                    <textarea 
-                      placeholder="Module Brief Description..."
-                      rows="2"
-                      value={newModDesc}
-                      onChange={(e) => setNewModDesc(e.target.value)}
-                      className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none"
-                    />
+                    <input type="text" placeholder="Module Title" required value={newModTitle} onChange={(e) => setNewModTitle(e.target.value)} className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none" />
+                    <textarea placeholder="Module Brief Description..." rows="2" value={newModDesc} onChange={(e) => setNewModDesc(e.target.value)} className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none resize-none" />
                   </div>
-                  <button
-                    type="submit"
-                    className="w-full py-2 bg-brand-black hover:bg-black dark:bg-brand-red dark:hover:bg-red-600 text-white rounded-lg text-xs font-bold"
-                  >
-                    Add Module
-                  </button>
+                  <button type="submit" className="w-full py-2 bg-brand-black hover:bg-black dark:bg-brand-red dark:hover:bg-red-600 text-white rounded-lg text-xs font-bold">Add Module</button>
                 </form>
-
               </div>
             )}
           </div>
         </div>
       )}
-
     </div>
   );
 };
