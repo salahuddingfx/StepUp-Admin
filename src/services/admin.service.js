@@ -96,3 +96,19 @@ export const getSettings = async () => {
 export const updateSettings = async (settingsData) => {
   return await api.put('/settings', settingsData);
 };
+
+export const createQuiz = async (quizData) => {
+  return await api.post('/quizzes', quizData);
+};
+
+export const deleteQuiz = async (id) => {
+  return await api.delete(`/quizzes/${id}`);
+};
+
+export const createAssignment = async (assignmentData) => {
+  return await api.post('/assignments', assignmentData);
+};
+
+export const deleteAssignment = async (id) => {
+  return await api.delete(`/assignments/${id}`);
+};
