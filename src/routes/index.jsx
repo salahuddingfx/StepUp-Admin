@@ -18,18 +18,40 @@ import Testimonials from '../pages/Testimonials';
 import Settings from '../pages/Settings';
 
 const AdminRouteGuard = ({ children }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Automated Developer Mock Log in for pairing review
-    if (!isAuthenticated) {
-      dispatch(loginSuccess({
-        accessToken: 'mock-admin-token-value',
-        user: { name: 'Ahmed Shahriar', email: 'founder@englishstepup.com', role: 'admin', avatar: '' }
-      }));
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenParam = urlParams.get('token');
+    const userParam = urlParams.get('user');
+
+    if (tokenParam && userParam) {
+      try {
+        const parsedUser = JSON.parse(decodeURIComponent(userParam));
+        dispatch(loginSuccess({
+          accessToken: tokenParam,
+          user: parsedUser
+        }));
+        // Clean URL parameters
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      } catch (err) {
+        console.error('Error parsing auth parameters:', err);
+      }
+    } else if (!isAuthenticated) {
+      const clientUrl = import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173';
+      window.location.href = `${clientUrl}/login`;
     }
   }, [isAuthenticated, dispatch]);
+
+  if (!isAuthenticated && !new URLSearchParams(window.location.search).get('token')) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-gray-400 flex items-center justify-center text-xs font-semibold">
+        Redirecting to authentication portal...
+      </div>
+    );
+  }
 
   return children;
 };
