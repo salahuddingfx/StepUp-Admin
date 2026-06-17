@@ -9,7 +9,11 @@ import {
   createModule,
   deleteModule,
   createLesson,
-  deleteLesson
+  deleteLesson,
+  createQuiz,
+  deleteQuiz,
+  createAssignment,
+  deleteAssignment
 } from '../services/admin.service';
 import { useForm } from 'react-hook-form';
 import { Plus, Trash2, Eye, EyeOff, X, Edit, BookOpen, ChevronRight, PlusCircle, Play, Loader2 } from 'lucide-react';
