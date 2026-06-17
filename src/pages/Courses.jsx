@@ -924,22 +924,246 @@ const Courses = () => {
                         </div>
 
                         {/* Lessons list */}
-                        <div className="pl-3 border-l border-gray-200 dark:border-gray-850 space-y-2">
+                        <div className="pl-3 border-l border-gray-200 dark:border-gray-850 space-y-3">
                           <h5 className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Lessons</h5>
                           {mod.lessons && mod.lessons.length > 0 ? (
                             mod.lessons.map((less) => (
-                              <div key={less._id} className="flex justify-between items-center bg-white dark:bg-brand-darkGray/60 border border-gray-150 dark:border-gray-800/80 p-2 rounded-lg text-[10px]">
-                                <div className="flex items-center space-x-1.5 font-medium">
-                                  <Play className="h-3 w-3 text-brand-red shrink-0" />
-                                  <span className="font-bold text-gray-700 dark:text-gray-300">{less.title}</span>
-                                  <span className="text-gray-400">({less.duration || '30 mins'})</span>
+                              <div key={less._id} className="bg-white dark:bg-brand-darkGray/60 border border-gray-150 dark:border-gray-800/80 p-4 rounded-xl text-[10px] space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center space-x-1.5 font-bold">
+                                    <Play className="h-3.5 w-3.5 text-brand-red shrink-0" />
+                                    <span className="text-[11px] text-gray-850 dark:text-white">{less.title}</span>
+                                    <span className="text-gray-400 font-normal">({less.duration || '30 mins'})</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleDeleteLesson(less._id)}
+                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
                                 </div>
-                                <button
-                                  onClick={() => handleDeleteLesson(less._id)}
-                                  className="text-gray-400 hover:text-red-500"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
+
+                                {less.description && (
+                                  <p className="text-[9.5px] text-gray-450 dark:text-gray-405 leading-relaxed">{less.description}</p>
+                                )}
+
+                                {/* Quiz & Assignment Resources */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-gray-800/60">
+                                  {/* Quiz column */}
+                                  <div className="space-y-2 bg-gray-50 dark:bg-brand-black/20 p-2.5 rounded-lg border border-gray-100 dark:border-gray-850">
+                                    <div className="font-bold text-gray-700 dark:text-gray-300">
+                                      <span>📋 Quiz Resource</span>
+                                    </div>
+                                    {less.quiz ? (
+                                      <div className="flex items-center justify-between bg-white dark:bg-brand-darkGray/80 px-2 py-1.5 border border-gray-150 dark:border-gray-800/80 rounded-md">
+                                        <div className="truncate pr-1">
+                                          <span className="font-bold text-brand-black dark:text-white block truncate">{less.quiz.title}</span>
+                                          <span className="text-[8.5px] text-gray-400">{less.quiz.questions?.length || 0} questions</span>
+                                        </div>
+                                        <button 
+                                          onClick={() => handleDeleteQuizClick(less.quiz._id)}
+                                          className="text-red-500 hover:text-red-700 shrink-0"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        {activeQuizFormLessonId === less._id ? (
+                                          <form onSubmit={(e) => handleCreateQuizSubmit(e, less._id)} className="space-y-2 pt-1 border-t border-gray-200/50 dark:border-gray-800/50">
+                                            <input 
+                                              type="text" 
+                                              required 
+                                              placeholder="Quiz Title"
+                                              value={quizTitle}
+                                              onChange={(e) => setQuizTitle(e.target.value)}
+                                              className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-205 dark:border-gray-800 rounded text-[9.5px] focus:outline-none"
+                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                              <input 
+                                                type="number" 
+                                                required 
+                                                placeholder="Time Limit (mins)"
+                                                value={quizTimeLimit}
+                                                onChange={(e) => setQuizTimeLimit(Number(e.target.value))}
+                                                className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-205 dark:border-gray-800 rounded text-[9.5px] focus:outline-none"
+                                              />
+                                              <input 
+                                                type="number" 
+                                                required 
+                                                placeholder="Passing Score (%)"
+                                                value={quizPassingScore}
+                                                onChange={(e) => setQuizPassingScore(Number(e.target.value))}
+                                                className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-205 dark:border-gray-800 rounded text-[9.5px] focus:outline-none"
+                                              />
+                                            </div>
+
+                                            {/* Questions list creation preview */}
+                                            {quizQuestions.length > 0 && (
+                                              <div className="space-y-1 bg-white dark:bg-brand-darkGray/60 p-2 border border-gray-150 rounded max-h-[120px] overflow-y-auto">
+                                                {quizQuestions.map((q, qidx) => (
+                                                  <div key={qidx} className="flex justify-between items-center text-[9px] border-b border-gray-100 pb-1">
+                                                    <span className="truncate font-medium">{qidx + 1}. {q.questionText}</span>
+                                                    <button type="button" onClick={() => setQuizQuestions(prev => prev.filter((_, i) => i !== qidx))} className="text-red-500 hover:underline">Remove</button>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+
+                                            {/* Add question subform */}
+                                            <div className="bg-white dark:bg-brand-darkGray/60 p-2 rounded border border-gray-150 dark:border-gray-800/80 space-y-2">
+                                              <div className="font-semibold text-gray-500 text-[8.5px] uppercase">New Question:</div>
+                                              <input 
+                                                type="text" 
+                                                placeholder="Question text"
+                                                value={newQText}
+                                                onChange={(e) => setNewQText(e.target.value)}
+                                                className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded text-[9px] focus:outline-none"
+                                              />
+                                              <div className="space-y-1">
+                                                {newQOptions.map((opt, oidx) => (
+                                                  <div key={oidx} className="flex items-center space-x-2">
+                                                    <input 
+                                                      type="radio" 
+                                                      name="correctAnswer" 
+                                                      checked={newQCorrectIndex === oidx}
+                                                      onChange={() => setNewQCorrectIndex(oidx)}
+                                                      className="text-brand-red focus:ring-brand-red h-3 w-3"
+                                                    />
+                                                    <input 
+                                                      type="text" 
+                                                      placeholder={`Option ${oidx + 1}`}
+                                                      value={opt}
+                                                      onChange={(e) => {
+                                                        const newVal = e.target.value;
+                                                        setNewQOptions(prev => prev.map((val, i) => i === oidx ? newVal : val));
+                                                      }}
+                                                      className="flex-grow px-2 py-0.5 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded text-[9px] focus:outline-none"
+                                                    />
+                                                  </div>
+                                                ))}
+                                              </div>
+                                              <button 
+                                                type="button" 
+                                                onClick={handleAddQuestionToQuiz}
+                                                className="w-full py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-brand-black text-[9px] font-bold rounded"
+                                              >
+                                                Add Question to List
+                                              </button>
+                                            </div>
+
+                                            <div className="flex justify-end space-x-1.5 pt-1">
+                                              <button type="button" onClick={() => setActiveQuizFormLessonId(null)} className="px-2.5 py-1 bg-gray-250 dark:bg-gray-800 rounded text-[9px]">Cancel</button>
+                                              <button type="submit" className="px-2.5 py-1 bg-brand-red hover:bg-red-600 text-white font-bold rounded text-[9px]">Save Quiz</button>
+                                            </div>
+                                          </form>
+                                        ) : (
+                                          <button 
+                                            onClick={() => handleOpenQuizForm(less._id)}
+                                            className="px-2.5 py-1.5 bg-white hover:bg-gray-100 dark:bg-brand-darkGray/60 dark:hover:bg-brand-black/20 border border-gray-200 dark:border-gray-800 rounded text-gray-500 hover:text-brand-red transition-all font-bold"
+                                          >
+                                            + Add Lesson Quiz
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Assignment column */}
+                                  <div className="space-y-2 bg-gray-50 dark:bg-brand-black/20 p-2.5 rounded-lg border border-gray-100 dark:border-gray-850">
+                                    <div className="font-bold text-gray-700 dark:text-gray-300">
+                                      <span>📝 Assignment Resource</span>
+                                    </div>
+                                    {less.assignment ? (
+                                      <div className="flex items-center justify-between bg-white dark:bg-brand-darkGray/80 px-2 py-1.5 border border-gray-150 dark:border-gray-800/80 rounded-md">
+                                        <div className="truncate pr-1">
+                                          <span className="font-bold text-brand-black dark:text-white block truncate">{less.assignment.title}</span>
+                                          <span className="text-[8.5px] text-gray-400">Max Points: {less.assignment.maxPoints} pts</span>
+                                        </div>
+                                        <button 
+                                          onClick={() => handleDeleteAssignmentClick(less.assignment._id)}
+                                          className="text-red-500 hover:text-red-700 shrink-0"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        {activeAssignmentFormLessonId === less._id ? (
+                                          <form onSubmit={(e) => handleCreateAssignmentSubmit(e, less._id)} className="space-y-2 pt-1 border-t border-gray-200/50 dark:border-gray-800/50">
+                                            <input 
+                                              type="text" 
+                                              required 
+                                              placeholder="Assignment Title"
+                                              value={assignmentTitle}
+                                              onChange={(e) => setAssignmentTitle(e.target.value)}
+                                              className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-205 dark:border-gray-800 rounded text-[9.5px] focus:outline-none"
+                                            />
+                                            <textarea 
+                                              required 
+                                              placeholder="Instructions..."
+                                              rows="2"
+                                              value={assignmentInstructions}
+                                              onChange={(e) => setAssignmentInstructions(e.target.value)}
+                                              className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-205 dark:border-gray-800 rounded text-[9.5px] focus:outline-none resize-none"
+                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                              <input 
+                                                type="number" 
+                                                required 
+                                                placeholder="Max Points"
+                                                value={assignmentMaxPoints}
+                                                onChange={(e) => setAssignmentMaxPoints(Number(e.target.value))}
+                                                className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-205 dark:border-gray-800 rounded text-[9.5px] focus:outline-none"
+                                              />
+                                              <input 
+                                                type="date" 
+                                                required 
+                                                value={assignmentDueDate}
+                                                onChange={(e) => setAssignmentDueDate(e.target.value)}
+                                                className="w-full px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-250 dark:border-gray-800 rounded text-[9.5px] focus:outline-none text-gray-500"
+                                              />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                              <label className="text-[8.5px] font-bold text-gray-400 uppercase">Resource Attachment (PDF)</label>
+                                              <div className="flex space-x-1.5">
+                                                <input 
+                                                  type="url" 
+                                                  placeholder="https://..."
+                                                  value={assignmentPdf}
+                                                  onChange={(e) => setAssignmentPdf(e.target.value)}
+                                                  className="flex-grow px-2 py-1 bg-white dark:bg-brand-darkGray border border-gray-200 dark:border-gray-800 rounded text-[9px] focus:outline-none"
+                                                />
+                                                <label className="px-2 py-1 bg-brand-black hover:bg-black text-white text-[8.5px] font-bold rounded cursor-pointer shrink-0 flex items-center justify-center">
+                                                  {uploading.assignment ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Upload'}
+                                                  <input 
+                                                    type="file" 
+                                                    accept=".pdf" 
+                                                    onChange={handleAssignmentPdfUpload} 
+                                                    className="hidden" 
+                                                  />
+                                                </label>
+                                              </div>
+                                            </div>
+
+                                            <div className="flex justify-end space-x-1.5 pt-1">
+                                              <button type="button" onClick={() => setActiveAssignmentFormLessonId(null)} className="px-2.5 py-1 bg-gray-250 dark:bg-gray-800 rounded text-[9px]">Cancel</button>
+                                              <button type="submit" className="px-2.5 py-1 bg-brand-red hover:bg-red-600 text-white font-bold rounded text-[9px]">Save Assignment</button>
+                                            </div>
+                                          </form>
+                                        ) : (
+                                          <button 
+                                            onClick={() => handleOpenAssignmentForm(less._id)}
+                                            className="px-2.5 py-1.5 bg-white hover:bg-gray-100 dark:bg-brand-darkGray/60 dark:hover:bg-brand-black/20 border border-gray-200 dark:border-gray-800 rounded text-gray-500 hover:text-brand-red transition-all font-bold"
+                                          >
+                                            + Add Lesson Assignment
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             ))
                           ) : (
