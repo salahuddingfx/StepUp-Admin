@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Save, Loader2, Plus, Trash2, GripVertical, Eye, Video, Quote } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2, GripVertical, Eye, Video, Quote, Upload, Image } from 'lucide-react';
 import { getSettings, updateSettings } from '../services/admin.service';
+import api from '../services/api';
 
 const emptySlide = {
   badge: '',
@@ -11,7 +12,8 @@ const emptySlide = {
   desc: '',
   ctaText: '',
   ctaLink: '',
-  glowClass: 'bg-brand-red/5'
+  glowClass: 'bg-brand-red/5',
+  image: ''
 };
 
 const glowOptions = [
@@ -34,6 +36,51 @@ const HomepageMedia = () => {
   const [founderQuote, setFounderQuote] = useState('');
   const [founderName, setFounderName] = useState('');
   const [founderRole, setFounderRole] = useState('');
+
+  const [uploadingSlide, setUploadingSlide] = useState(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const videoInputRef = useRef(null);
+
+  const handleFileUpload = async (file, folder = 'english_stepup') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+
+    const res = await api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    if (res.success && res.url) {
+      return res.url;
+    }
+    throw new Error(res.message || 'Upload failed');
+  };
+
+  const handleSlideImageUpload = async (index, file) => {
+    setUploadingSlide(index);
+    try {
+      const url = await handleFileUpload(file, 'english_stepup/slides');
+      handleSlideChange(index, 'image', url);
+      toast.success('Slide image uploaded');
+    } catch (err) {
+      toast.error(err.message || 'Image upload failed');
+    } finally {
+      setUploadingSlide(null);
+    }
+  };
+
+  const handleVideoUpload = async (file) => {
+    setUploadingVideo(true);
+    try {
+      const url = await handleFileUpload(file, 'english_stepup/videos');
+      setIntroVideoUrl(url);
+      toast.success('Video uploaded');
+    } catch (err) {
+      toast.error(err.message || 'Video upload failed');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -241,6 +288,60 @@ const HomepageMedia = () => {
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase">Background Image</label>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="text"
+                          value={slide.image}
+                          onChange={(e) => handleSlideChange(idx, 'image', e.target.value)}
+                          className="flex-1 px-3 py-2 bg-transparent border border-gray-250 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                          placeholder="Image URL or upload below"
+                        />
+                        <label className={`shrink-0 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          uploadingSlide === idx
+                            ? 'bg-gray-300 text-gray-500'
+                            : 'bg-brand-red hover:bg-red-600 text-white'
+                        }`}>
+                          {uploadingSlide === idx ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <div className="flex items-center space-x-1.5">
+                              <Upload className="h-4 w-4" />
+                              <span>Upload</span>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleSlideImageUpload(idx, file);
+                              e.target.value = '';
+                            }}
+                            disabled={uploadingSlide === idx}
+                          />
+                        </label>
+                      </div>
+                      {slide.image && (
+                        <div className="mt-2 relative inline-block">
+                          <img
+                            src={slide.image}
+                            alt="Slide preview"
+                            className="h-20 w-36 object-cover rounded-xl border border-gray-200 dark:border-gray-800"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                          <button
+                            onClick={() => handleSlideChange(idx, 'image', '')}
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-gray-500 uppercase">Title Start</label>
@@ -321,16 +422,47 @@ const HomepageMedia = () => {
           <div className="space-y-2">
             <label className="text-xs font-bold flex items-center space-x-2">
               <Video className="h-4 w-4 text-brand-red" />
-              <span>Introduction Video URL</span>
+              <span>Introduction Video</span>
             </label>
-            <input
-              type="url"
-              value={introVideoUrl}
-              onChange={(e) => setIntroVideoUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-transparent border border-gray-250 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-              placeholder="https://example.com/video.mp4"
-            />
-            <p className="text-[10px] text-gray-400">Direct video URL or embed URL for the homepage founder intro video.</p>
+            <div className="flex items-center space-x-3">
+              <input
+                type="url"
+                value={introVideoUrl}
+                onChange={(e) => setIntroVideoUrl(e.target.value)}
+                className="flex-1 px-3 py-2 bg-transparent border border-gray-250 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                placeholder="https://example.com/video.mp4 or upload below"
+              />
+              <label className={`shrink-0 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                uploadingVideo
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-brand-red hover:bg-red-600 text-white'
+              }`}>
+                {uploadingVideo ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <div className="flex items-center space-x-1.5">
+                    <Upload className="h-4 w-4" />
+                    <span>Upload Video</span>
+                  </div>
+                )}
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleVideoUpload(file);
+                    e.target.value = '';
+                  }}
+                  disabled={uploadingVideo}
+                />
+              </label>
+            </div>
+            <p className="text-[10px] text-gray-400">Upload an MP4 video or paste a direct URL. Max 100MB.</p>
+            {introVideoUrl && introVideoUrl.includes('.mp4') && (
+              <video src={introVideoUrl} controls className="w-full max-h-48 rounded-xl border border-gray-200 dark:border-gray-800 mt-2" />
+            )}
           </div>
 
           <div className="space-y-2">
