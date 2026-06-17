@@ -12,6 +12,9 @@ import Dashboard from '../pages/Dashboard';
 import Students from '../pages/Students';
 import Teachers from '../pages/Teachers';
 import Courses from '../pages/Courses';
+import Quizzes from '../pages/Quizzes';
+import Assignments from '../pages/Assignments';
+import Resources from '../pages/Resources';
 import Payments from '../pages/Payments';
 import Transactions from '../pages/Transactions';
 import Blogs from '../pages/Blogs';
@@ -78,6 +81,9 @@ const AppRoutes = () => {
         <Route path="students" element={<Students />} />
         <Route path="teachers" element={<Teachers />} />
         <Route path="courses" element={<Courses />} />
+        <Route path="quizzes" element={<Quizzes />} />
+        <Route path="assignments" element={<Assignments />} />
+        <Route path="resources" element={<Resources />} />
         <Route path="payments" element={<Payments />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="blogs" element={<Blogs />} />
