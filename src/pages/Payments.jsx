@@ -130,9 +130,21 @@ const Payments = () => {
                       <div className="font-bold">{pay.student?.name}</div>
                       <div className="text-[10px] text-gray-400">{pay.student?.email}</div>
                     </td>
-                    <td className="p-4 text-gray-500">{pay.course?.title}</td>
-                    <td className="p-4 font-bold text-brand-black dark:text-white">৳{pay.amount}</td>
+                    <td className="p-4 text-gray-500 max-w-[120px] truncate" title={pay.course?.title}>{pay.course?.title}</td>
+                    <td className="p-4">
+                      <div className="font-bold text-brand-black dark:text-white">৳{pay.amount}</div>
+                      {pay.discountAmount > 0 && (
+                        <div className="text-[9px] text-gray-400 line-through">৳{pay.originalAmount}</div>
+                      )}
+                    </td>
                     <td className="p-4 uppercase text-gray-400 font-bold text-[10px]">{pay.paymentMethod}</td>
+                    <td className="p-4 text-gray-500 text-[10px] font-mono max-w-[100px] truncate">{pay.senderNumber || '-'}</td>
+                    <td className="p-4 text-gray-500 text-[10px] font-mono max-w-[100px] truncate">{pay.transactionId || '-'}</td>
+                    <td className="p-4 text-[10px]">
+                      {pay.couponCode ? (
+                        <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded font-bold text-[9px]">{pay.couponCode}</span>
+                      ) : '-'}
+                    </td>
                     <td className="p-4">
                       <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full capitalize ${
                         pay.status === 'completed' 
