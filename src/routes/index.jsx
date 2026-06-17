@@ -21,6 +21,7 @@ import Blogs from '../pages/Blogs';
 import Testimonials from '../pages/Testimonials';
 import Settings from '../pages/Settings';
 import HomepageMedia from '../pages/HomepageMedia';
+import Coupons from '../pages/Coupons';
 import Login from '../pages/Login';
 
 const AdminRouteGuard = ({ children }) => {
@@ -91,6 +92,7 @@ const AppRoutes = () => {
         <Route path="testimonials" element={<Testimonials />} />
         <Route path="settings" element={<Settings />} />
         <Route path="homepage" element={<HomepageMedia />} />
+        <Route path="coupons" element={<Coupons />} />
       </Route>
       
       <Route path="/login" element={<Login />} />
