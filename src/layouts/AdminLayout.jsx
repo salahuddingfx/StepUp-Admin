@@ -80,7 +80,7 @@ const AdminLayout = () => {
             </div>
             <div className="overflow-hidden">
               <h4 className="text-xs font-bold truncate text-white">{user?.name || 'Administrator'}</h4>
-              <p className="text-[9px] text-gray-500 truncate uppercase tracking-widest font-extrabold">Super Admin</p>
+              <p className="text-[9px] text-gray-500 truncate uppercase tracking-widest font-extrabold">{(user?.role === 'superadmin' ? 'Super Admin' : 'Administrator')}</p>
             </div>
           </div>
         </div>
