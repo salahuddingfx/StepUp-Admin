@@ -37,8 +37,9 @@ const Courses = () => {
   const [newLessVideo, setNewLessVideo] = useState('');
   const [newLessDuration, setNewLessDuration] = useState('30 mins');
   const [newLessContent, setNewLessContent] = useState('');
+  const [newLessPdf, setNewLessPdf] = useState('');
 
-  const [uploading, setUploading] = useState({ thumbnail: false, video: false });
+  const [uploading, setUploading] = useState({ thumbnail: false, video: false, pdf: false });
 
   const { register: registerCreate, handleSubmit: handleSubmitCreate, reset: resetCreate, setValue: setValueCreate, watch: watchCreate } = useForm();
   const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, setValue: setValueEdit, watch: watchEdit } = useForm();
@@ -69,6 +70,30 @@ const Courses = () => {
       toast.error(err.message || 'Upload failed');
     } finally {
       setUploading(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const handleLessonPdfUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'lessons/resources');
+
+    setUploading(prev => ({ ...prev, pdf: true }));
+    try {
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.success) {
+        setNewLessPdf(res.url);
+        toast.success('Resource PDF uploaded successfully to Cloudinary!');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, pdf: false }));
     }
   };
 
@@ -256,6 +281,7 @@ const Courses = () => {
         content: newLessContent,
         videoUrl: newLessVideo || 'https://www.w3schools.com/html/mov_bbb.mp4',
         duration: newLessDuration,
+        pdfNotesUrl: newLessPdf,
         moduleId
       });
       if (res.success) {
@@ -264,6 +290,7 @@ const Courses = () => {
         setNewLessDesc('');
         setNewLessVideo('');
         setNewLessContent('');
+        setNewLessPdf('');
         setNewLessDuration('30 mins');
         setActiveAddLessonModId(null);
         fetchCurriculum(selectedCourse._id);
@@ -778,23 +805,68 @@ const Courses = () => {
                                 required
                                 value={newLessTitle}
                                 onChange={(e) => setNewLessTitle(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
                               />
                               <input 
                                 type="text"
                                 placeholder="Duration (e.g. 15 mins)"
                                 value={newLessDuration}
                                 onChange={(e) => setNewLessDuration(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
                               />
                             </div>
-                            <input 
-                              type="url"
-                              placeholder="Video URL (YouTube/Vimeo/Direct MP4)"
-                              value={newLessVideo}
-                              onChange={(e) => setNewLessVideo(e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none"
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <input 
+                                type="text"
+                                placeholder="Short Description"
+                                value={newLessDesc}
+                                onChange={(e) => setNewLessDesc(e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
+                              />
+                              <input 
+                                type="url"
+                                placeholder="Video URL (YouTube/Vimeo/MP4)"
+                                value={newLessVideo}
+                                onChange={(e) => setNewLessVideo(e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
+                              />
+                            </div>
+
+                            <textarea 
+                              placeholder="Study Notes / Markdown Content..."
+                              rows="2"
+                              value={newLessContent}
+                              onChange={(e) => setNewLessContent(e.target.value)}
+                              className="w-full px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white resize-none"
                             />
+
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">PDF Notes / Resource Material</label>
+                              <div className="flex space-x-2">
+                                <input 
+                                  type="url" 
+                                  placeholder="PDF Resource URL (https://...)"
+                                  value={newLessPdf}
+                                  onChange={(e) => setNewLessPdf(e.target.value)}
+                                  className="flex-grow px-2.5 py-1.5 bg-transparent border border-gray-150 dark:border-gray-800 rounded-md text-[11px] focus:outline-none text-brand-black dark:text-white"
+                                />
+                                <label className="px-3 py-1.5 bg-brand-black text-white hover:bg-black rounded-md text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
+                                  {uploading.pdf ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    'Upload PDF'
+                                  )}
+                                  <input 
+                                    type="file" 
+                                    accept=".pdf"
+                                    onChange={handleLessonPdfUpload}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+                            </div>
+
                             <div className="flex justify-end space-x-2 pt-1">
                               <button 
                                 type="button"
