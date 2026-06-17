@@ -144,3 +144,15 @@ export const updateCoupon = async (id, data) => {
 export const deleteCoupon = async (id) => {
   return await api.delete(`/coupons/${id}`);
 };
+
+export const getCertificates = async () => {
+  return await api.get('/certificates');
+};
+
+export const issueCertificate = async (studentId, courseId) => {
+  return await api.post('/certificates/issue', { studentId, courseId });
+};
+
+export const deleteCertificate = async (id) => {
+  return await api.delete(`/certificates/${id}`);
+};
