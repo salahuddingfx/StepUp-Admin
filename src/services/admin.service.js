@@ -112,3 +112,19 @@ export const createAssignment = async (assignmentData) => {
 export const deleteAssignment = async (id) => {
   return await api.delete(`/assignments/${id}`);
 };
+
+export const updateLesson = async (id, lessonData) => {
+  return await api.put(`/lessons/${id}`, lessonData);
+};
+
+export const getQuizzes = async () => {
+  return await api.get('/quizzes');
+};
+
+export const getAssignments = async () => {
+  return await api.get('/assignments');
+};
+
+export const getLessons = async () => {
+  return await api.get('/lessons');
+};
