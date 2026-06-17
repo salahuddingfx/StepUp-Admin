@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen, 
   CreditCard, Landmark, FileText, MessageSquare, 
   Settings, LogOut, Sun, Moon, Bell, Menu, X, ShieldAlert,
-  FileSpreadsheet, ClipboardCheck, Home, Tag
+  FileSpreadsheet, ClipboardCheck, Home, Tag, Award
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -37,6 +37,7 @@ const AdminLayout = () => {
     { name: 'Transactions', path: '/admin/transactions', icon: Landmark },
     { name: 'Blogs', path: '/admin/blogs', icon: FileText },
     { name: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare },
+    { name: 'Certificates', path: '/admin/certificates', icon: Award },
     { name: 'Coupons', path: '/admin/coupons', icon: Tag },
     { name: 'Homepage Media', path: '/admin/homepage', icon: Home },
     { name: 'Settings', path: '/admin/settings', icon: Settings }
