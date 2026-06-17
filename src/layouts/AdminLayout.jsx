@@ -6,7 +6,8 @@ import { toggleTheme } from '../store/themeSlice';
 import { 
   LayoutDashboard, Users, GraduationCap, BookOpen, 
   CreditCard, Landmark, FileText, MessageSquare, 
-  Settings, LogOut, Sun, Moon, Bell, Menu, X, ShieldAlert
+  Settings, LogOut, Sun, Moon, Bell, Menu, X, ShieldAlert,
+  FileSpreadsheet, ClipboardCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -29,6 +30,9 @@ const AdminLayout = () => {
     { name: 'Students', path: '/admin/students', icon: Users },
     { name: 'Teachers', path: '/admin/teachers', icon: GraduationCap },
     { name: 'Courses', path: '/admin/courses', icon: BookOpen },
+    { name: 'Quiz Manager', path: '/admin/quizzes', icon: FileSpreadsheet },
+    { name: 'Assignment Manager', path: '/admin/assignments', icon: ClipboardCheck },
+    { name: 'Resources Manager', path: '/admin/resources', icon: FileText },
     { name: 'Payments', path: '/admin/payments', icon: CreditCard },
     { name: 'Transactions', path: '/admin/transactions', icon: Landmark },
     { name: 'Blogs', path: '/admin/blogs', icon: FileText },
