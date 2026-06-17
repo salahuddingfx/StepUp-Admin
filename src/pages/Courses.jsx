@@ -12,8 +12,9 @@ import {
   deleteLesson
 } from '../services/admin.service';
 import { useForm } from 'react-hook-form';
-import { Plus, Trash2, Eye, EyeOff, X, Edit, BookOpen, ChevronRight, PlusCircle, Play } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, X, Edit, BookOpen, ChevronRight, PlusCircle, Play, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -37,8 +38,39 @@ const Courses = () => {
   const [newLessDuration, setNewLessDuration] = useState('30 mins');
   const [newLessContent, setNewLessContent] = useState('');
 
-  const { register: registerCreate, handleSubmit: handleSubmitCreate, reset: resetCreate } = useForm();
-  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit } = useForm();
+  const [uploading, setUploading] = useState({ thumbnail: false, video: false });
+
+  const { register: registerCreate, handleSubmit: handleSubmitCreate, reset: resetCreate, setValue: setValueCreate, watch: watchCreate } = useForm();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, setValue: setValueEdit, watch: watchEdit } = useForm();
+
+  const watchCreateThumbnail = watchCreate('thumbnail');
+  const watchCreateIntroVideo = watchCreate('introVideoUrl');
+  const watchEditThumbnail = watchEdit('thumbnail');
+  const watchEditIntroVideo = watchEdit('introVideoUrl');
+
+  const handleCloudinaryUpload = async (e, type, fieldName, setValueField) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', type === 'thumbnail' ? 'courses/thumbnails' : 'courses/videos');
+
+    setUploading(prev => ({ ...prev, [type]: true }));
+    try {
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.success) {
+        setValueField(fieldName, res.url);
+        toast.success(`${type === 'thumbnail' ? 'Thumbnail' : 'Intro video'} uploaded successfully to Cloudinary!`);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }));
+    }
+  };
 
   // Mocks fallback
   const mockCourses = [
@@ -418,24 +450,57 @@ const Courses = () => {
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Thumbnail / Banner URL</label>
-                <input 
-                  type="url" 
-                  required 
-                  {...registerCreate('thumbnail')}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                />
+                <div className="flex space-x-2">
+                  <input 
+                    type="url" 
+                    required 
+                    {...registerCreate('thumbnail')}
+                    placeholder="https://images.unsplash.com/..."
+                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                  />
+                  <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
+                    {uploading.thumbnail ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      'Upload Banner'
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => handleCloudinaryUpload(e, 'thumbnail', 'thumbnail', setValueCreate)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                {watchCreateThumbnail && (
+                  <img src={watchCreateThumbnail} alt="Thumbnail preview" className="h-16 w-full object-cover rounded-lg mt-2 border border-gray-200" />
+                )}
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Intro Video URL</label>
-                <input 
-                  type="url" 
-                  required 
-                  {...registerCreate('introVideoUrl')}
-                  placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                />
+                <div className="flex space-x-2">
+                  <input 
+                    type="url" 
+                    required 
+                    {...registerCreate('introVideoUrl')}
+                    placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
+                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                  />
+                  <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
+                    {uploading.video ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      'Upload Video'
+                    )}
+                    <input 
+                      type="file" 
+                      accept="video/*"
+                      onChange={(e) => handleCloudinaryUpload(e, 'video', 'introVideoUrl', setValueCreate)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -547,24 +612,57 @@ const Courses = () => {
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Thumbnail / Banner URL</label>
-                <input 
-                  type="url" 
-                  required 
-                  {...registerEdit('thumbnail')}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                />
+                <div className="flex space-x-2">
+                  <input 
+                    type="url" 
+                    required 
+                    {...registerEdit('thumbnail')}
+                    placeholder="https://images.unsplash.com/..."
+                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                  />
+                  <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
+                    {uploading.thumbnail ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      'Upload Banner'
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => handleCloudinaryUpload(e, 'thumbnail', 'thumbnail', setValueEdit)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                {watchEditThumbnail && (
+                  <img src={watchEditThumbnail} alt="Thumbnail preview" className="h-16 w-full object-cover rounded-lg mt-2 border border-gray-200" />
+                )}
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-650 dark:text-gray-300 uppercase">Intro Video URL</label>
-                <input 
-                  type="url" 
-                  required 
-                  {...registerEdit('introVideoUrl')}
-                  placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
-                  className="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
-                />
+                <div className="flex space-x-2">
+                  <input 
+                    type="url" 
+                    required 
+                    {...registerEdit('introVideoUrl')}
+                    placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
+                    className="flex-grow px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                  />
+                  <label className="px-3 py-2 bg-brand-black text-white hover:bg-black rounded-lg text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center shrink-0">
+                    {uploading.video ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      'Upload Video'
+                    )}
+                    <input 
+                      type="file" 
+                      accept="video/*"
+                      onChange={(e) => handleCloudinaryUpload(e, 'video', 'introVideoUrl', setValueEdit)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-1">
