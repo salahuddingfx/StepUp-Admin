@@ -16,6 +16,7 @@ import Transactions from '../pages/Transactions';
 import Blogs from '../pages/Blogs';
 import Testimonials from '../pages/Testimonials';
 import Settings from '../pages/Settings';
+import Login from '../pages/Login';
 
 const AdminRouteGuard = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -39,18 +40,11 @@ const AdminRouteGuard = ({ children }) => {
       } catch (err) {
         console.error('Error parsing auth parameters:', err);
       }
-    } else if (!isAuthenticated) {
-      const clientUrl = import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173';
-      window.location.href = `${clientUrl}/login`;
     }
-  }, [isAuthenticated, dispatch]);
+  }, [dispatch]);
 
   if (!isAuthenticated && !new URLSearchParams(window.location.search).get('token')) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-gray-400 flex items-center justify-center text-xs font-semibold">
-        Redirecting to authentication portal...
-      </div>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -77,6 +71,8 @@ const AppRoutes = () => {
         <Route path="testimonials" element={<Testimonials />} />
         <Route path="settings" element={<Settings />} />
       </Route>
+      
+      <Route path="/login" element={<Login />} />
       
       {/* Catch-all redirects */}
       <Route path="*" element={<Navigate to="/admin" replace />} />
