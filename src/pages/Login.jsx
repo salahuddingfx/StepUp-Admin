@@ -35,7 +35,7 @@ const Login = () => {
 
       if (res.success) {
         // Enforce admin validation
-        if (res.user.role !== 'admin') {
+        if (res.user.role !== 'admin' && res.user.role !== 'superadmin') {
           const errMsg = 'Access Denied: Only administrators can access this control panel.';
           dispatch(loginFailure(errMsg));
           toast.error(errMsg);

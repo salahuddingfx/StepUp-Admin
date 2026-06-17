@@ -37,7 +37,7 @@ const AdminRouteGuard = ({ children }) => {
 
       try {
         const res = await api.get('/users/profile');
-        if (res.success && res.user && res.user.role === 'admin') {
+        if (res.success && res.user && (res.user.role === 'admin' || res.user.role === 'superadmin')) {
           dispatch(loginSuccess({ user: res.user }));
         } else {
           dispatch(logoutUser());
