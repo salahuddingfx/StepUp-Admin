@@ -14,7 +14,9 @@ const Settings = () => {
       contactEmail: '',
       contactPhone: '',
       maintenanceMode: false,
-      allowTeacherRegistration: false
+      allowTeacherRegistration: false,
+      bkashNumber: '',
+      nagadNumber: ''
     }
   });
 
@@ -103,6 +105,27 @@ const Settings = () => {
                   type="text" 
                   required 
                   {...register('contactPhone')}
+                  className="w-full px-3 py-2 bg-transparent border border-gray-250 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100 dark:border-gray-800/50">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">bKash Number (Send Money)</label>
+                <input 
+                  type="text" 
+                  {...register('bkashNumber')}
+                  placeholder="01XXXXXXXXX"
+                  className="w-full px-3 py-2 bg-transparent border border-gray-250 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">Nagad Number (Send Money)</label>
+                <input 
+                  type="text" 
+                  {...register('nagadNumber')}
+                  placeholder="01XXXXXXXXX"
                   className="w-full px-3 py-2 bg-transparent border border-gray-250 dark:border-gray-800 rounded-lg text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
